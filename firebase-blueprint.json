@@ -1,0 +1,108 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Authenticated staff member or portal user profile.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128, "pattern": "^[a-zA-Z0-9_\\-]+$" },
+        "username": { "type": "string", "maxLength": 100 },
+        "fullName": { "type": "string", "maxLength": 150 },
+        "email": { "type": "string", "maxLength": 150 },
+        "role": {
+          "type": "string",
+          "enum": ["Principal Partner", "Head of Chamber", "Administrator", "Account Officer", "Counsel", "Client", "Tenant", "Property Owner"]
+        },
+        "branchId": { "type": "string", "maxLength": 128 },
+        "branchCode": { "type": "string", "maxLength": 32 },
+        "mustChangePassword": { "type": "boolean" },
+        "mfaVerified": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["Active", "Suspended", "Archived"] },
+        "createdBy": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "username", "fullName", "role", "branchId", "mustChangePassword", "status", "createdAt"]
+    },
+    "Branch": {
+      "title": "Branch",
+      "description": "Law firm branch office managed exclusively by Principal Partner.",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string", "maxLength": 32 },
+        "name": { "type": "string", "maxLength": 120 },
+        "city": { "type": "string", "maxLength": 80 },
+        "state": { "type": "string", "maxLength": 80 },
+        "address": { "type": "string", "maxLength": 300 },
+        "phone": { "type": "string", "maxLength": 40 },
+        "email": { "type": "string", "maxLength": 120 },
+        "headOfChamberName": { "type": "string", "maxLength": 120 },
+        "status": { "type": "string", "enum": ["Active", "Suspended", "Archived"] },
+        "authorUid": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["code", "name", "city", "state", "status", "authorUid", "createdAt"]
+    },
+    "FirmRecord": {
+      "title": "FirmRecord",
+      "description": "Unified operational record for legal matters, clients, properties, tenants, finance, compliance, and administration.",
+      "type": "object",
+      "properties": {
+        "module": { "type": "string", "maxLength": 64 },
+        "uniqueCode": { "type": "string", "maxLength": 64 },
+        "title": { "type": "string", "maxLength": 200 },
+        "subtitle": { "type": "string", "maxLength": 200 },
+        "branchId": { "type": "string", "maxLength": 128 },
+        "branchCode": { "type": "string", "maxLength": 32 },
+        "status": { "type": "string", "maxLength": 64 },
+        "category": { "type": "string", "maxLength": 100 },
+        "subCategory": { "type": "string", "maxLength": 100 },
+        "amount": { "type": "number" },
+        "vatAmount": { "type": "number" },
+        "whtAmount": { "type": "number" },
+        "isPublic": { "type": "boolean" },
+        "portalAccessCode": { "type": "string", "maxLength": 64 },
+        "details": { "type": "object" },
+        "authorUid": { "type": "string", "maxLength": 128 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["module", "uniqueCode", "title", "branchId", "branchCode", "status", "authorUid", "createdAt"]
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "Immutable security, sync, upload, and operational audit trail entry.",
+      "type": "object",
+      "properties": {
+        "action": { "type": "string", "maxLength": 150 },
+        "module": { "type": "string", "maxLength": 64 },
+        "branchCode": { "type": "string", "maxLength": 32 },
+        "actorName": { "type": "string", "maxLength": 120 },
+        "actorRole": { "type": "string", "maxLength": 64 },
+        "authorUid": { "type": "string", "maxLength": 128 },
+        "severity": { "type": "string", "enum": ["Info", "Warning", "Critical"] },
+        "summary": { "type": "string", "maxLength": 500 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["action", "module", "branchCode", "actorName", "actorRole", "authorUid", "severity", "summary", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Staff and portal user profiles keyed by Firebase Auth UID."
+    },
+    "/branches/{branchId}": {
+      "schema": { "$ref": "#/entities/Branch" },
+      "description": "Firm branches created and controlled by the Principal Partner."
+    },
+    "/records/{recordId}": {
+      "schema": { "$ref": "#/entities/FirmRecord" },
+      "description": "All branch-isolated legal, property, financial, document, and public CMS records."
+    },
+    "/audit_logs/{logId}": {
+      "schema": { "$ref": "#/entities/AuditLog" },
+      "description": "Immutable firm-wide audit trail entries."
+    }
+  }
+}

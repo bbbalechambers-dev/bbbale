@@ -1,0 +1,171 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Pillar 1: Global Safety Net (Default-Deny Catch-All)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Pillar 3: Reusable Hardened Global Helpers
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isBootstrappedPrincipal() {
+      return isSignedIn()
+        && request.auth.token.email == 'seedatshinge@gmail.com'
+        && request.auth.token.email_verified == true;
+    }
+
+    function isPrincipalPartner() {
+      return isBootstrappedPrincipal()
+        || (isSignedIn()
+            && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+            && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Principal Partner'
+            && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'Active');
+    }
+
+    // Pillar 2: Validation Blueprints
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['uid', 'username', 'fullName', 'role', 'branchId', 'mustChangePassword', 'status', 'createdAt'])
+        && data.keys().hasOnly(['uid', 'username', 'fullName', 'email', 'role', 'branchId', 'branchCode', 'mustChangePassword', 'mfaVerified', 'status', 'createdBy', 'createdAt', 'updatedAt'])
+        && data.uid is string && data.uid.size() >= 1 && data.uid.size() <= 128 && data.uid.matches('^[a-zA-Z0-9_\\-]+$')
+        && data.username is string && data.username.size() >= 1 && data.username.size() <= 100
+        && data.fullName is string && data.fullName.size() >= 1 && data.fullName.size() <= 150
+        && (!('email' in data) || (data.email is string && data.email.size() <= 150))
+        && data.role is string && data.role in ['Principal Partner', 'Head of Chamber', 'Administrator', 'Account Officer', 'Counsel', 'Client', 'Tenant', 'Property Owner']
+        && data.branchId is string && data.branchId.size() >= 1 && data.branchId.size() <= 128
+        && (!('branchCode' in data) || (data.branchCode is string && data.branchCode.size() <= 32))
+        && data.mustChangePassword is bool
+        && (!('mfaVerified' in data) || data.mfaVerified is bool)
+        && data.status is string && data.status in ['Active', 'Suspended', 'Archived']
+        && (!('createdBy' in data) || (data.createdBy is string && data.createdBy.size() <= 128))
+        && data.createdAt is string && data.createdAt.size() <= 64
+        && (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 64));
+    }
+
+    function isValidBranch(data) {
+      return data.keys().hasAll(['code', 'name', 'city', 'state', 'status', 'authorUid', 'createdAt'])
+        && data.keys().hasOnly(['code', 'name', 'city', 'state', 'address', 'phone', 'email', 'headOfChamberName', 'status', 'authorUid', 'createdAt', 'updatedAt'])
+        && data.code is string && data.code.size() >= 2 && data.code.size() <= 32
+        && data.name is string && data.name.size() >= 2 && data.name.size() <= 120
+        && data.city is string && data.city.size() >= 2 && data.city.size() <= 80
+        && data.state is string && data.state.size() >= 2 && data.state.size() <= 80
+        && (!('address' in data) || (data.address is string && data.address.size() <= 300))
+        && (!('phone' in data) || (data.phone is string && data.phone.size() <= 40))
+        && (!('email' in data) || (data.email is string && data.email.size() <= 120))
+        && (!('headOfChamberName' in data) || (data.headOfChamberName is string && data.headOfChamberName.size() <= 120))
+        && data.status is string && data.status in ['Active', 'Suspended', 'Archived']
+        && data.authorUid is string && data.authorUid.size() >= 1 && data.authorUid.size() <= 128
+        && ((isSignedIn() && data.authorUid == request.auth.uid) || data.authorUid == 'PRINCIPAL_PARTNER_SESSION')
+        && data.createdAt is string && data.createdAt.size() <= 64
+        && (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 64));
+    }
+
+    function isValidFirmRecord(data) {
+      return data.keys().hasAll(['module', 'uniqueCode', 'title', 'branchId', 'branchCode', 'status', 'isPublic', 'authorUid', 'createdAt'])
+        && data.keys().hasOnly(['module', 'uniqueCode', 'title', 'subtitle', 'branchId', 'branchCode', 'status', 'category', 'subCategory', 'amount', 'vatAmount', 'whtAmount', 'isPublic', 'portalAccessCode', 'details', 'authorUid', 'createdAt', 'updatedAt'])
+        && data.module is string && data.module.size() >= 1 && data.module.size() <= 64
+        && data.uniqueCode is string && data.uniqueCode.size() >= 1 && data.uniqueCode.size() <= 64
+        && data.title is string && data.title.size() >= 1 && data.title.size() <= 200
+        && (!('subtitle' in data) || (data.subtitle is string && data.subtitle.size() <= 200))
+        && data.branchId is string && data.branchId.size() >= 1 && data.branchId.size() <= 128
+        && data.branchCode is string && data.branchCode.size() >= 1 && data.branchCode.size() <= 32
+        && data.status is string && data.status.size() >= 1 && data.status.size() <= 64
+        && (!('category' in data) || (data.category is string && data.category.size() <= 100))
+        && (!('subCategory' in data) || (data.subCategory is string && data.subCategory.size() <= 100))
+        && (!('amount' in data) || data.amount is number)
+        && (!('vatAmount' in data) || data.vatAmount is number)
+        && (!('whtAmount' in data) || data.whtAmount is number)
+        && data.isPublic is bool
+        && (!('portalAccessCode' in data) || (data.portalAccessCode is string && data.portalAccessCode.size() <= 64))
+        && (!('details' in data) || data.details is map)
+        && data.authorUid is string && data.authorUid.size() >= 1 && data.authorUid.size() <= 128
+        && ((isSignedIn() && data.authorUid == request.auth.uid) || data.authorUid in ['PUBLIC_PORTAL', 'STAFF_SESSION'])
+        && data.createdAt is string && data.createdAt.size() <= 64
+        && (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 64));
+    }
+
+    function isValidAuditLog(data) {
+      return data.keys().hasAll(['action', 'module', 'branchCode', 'actorName', 'actorRole', 'authorUid', 'severity', 'summary', 'createdAt'])
+        && data.keys().hasOnly(['action', 'module', 'branchCode', 'actorName', 'actorRole', 'authorUid', 'severity', 'summary', 'createdAt'])
+        && data.action is string && data.action.size() >= 1 && data.action.size() <= 150
+        && data.module is string && data.module.size() >= 1 && data.module.size() <= 64
+        && data.branchCode is string && data.branchCode.size() >= 1 && data.branchCode.size() <= 32
+        && data.actorName is string && data.actorName.size() >= 1 && data.actorName.size() <= 120
+        && data.actorRole is string && data.actorRole.size() >= 1 && data.actorRole.size() <= 64
+        && data.authorUid is string && data.authorUid.size() >= 1 && data.authorUid.size() <= 128
+        && ((isSignedIn() && data.authorUid == request.auth.uid) || data.authorUid in ['PUBLIC_PORTAL', 'STAFF_SESSION'])
+        && data.severity is string && data.severity in ['Info', 'Warning', 'Critical']
+        && data.summary is string && data.summary.size() >= 1 && data.summary.size() <= 500
+        && data.createdAt is string && data.createdAt.size() <= 64;
+    }
+
+    // Connection health check endpoint
+    match /test/{docId} {
+      allow get: if isValidId(docId);
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      allow get: if isValidId(userId) && resource.data.status in ['Active', 'Suspended', 'Archived'];
+      allow list: if resource.data.status in ['Active', 'Suspended', 'Archived'];
+      allow create: if isValidId(userId)
+        && isValidUserProfile(incoming())
+        && ((isSignedIn() && incoming().uid == request.auth.uid) || incoming().uid == userId);
+      allow update: if isValidId(userId)
+        && isValidUserProfile(incoming())
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().diff(existing()).affectedKeys().hasOnly(['username', 'fullName', 'email', 'role', 'branchId', 'branchCode', 'mustChangePassword', 'mfaVerified', 'status', 'updatedAt']);
+      allow delete: if isValidId(userId) && isPrincipalPartner();
+    }
+
+    // Branches Collection
+    match /branches/{branchId} {
+      allow get: if isValidId(branchId) && resource.data.status in ['Active', 'Suspended', 'Archived'];
+      allow list: if resource.data.status in ['Active', 'Suspended', 'Archived'];
+      allow create: if isValidId(branchId) && isValidBranch(incoming());
+      allow update: if isValidId(branchId)
+        && isValidBranch(incoming())
+        && incoming().createdAt == existing().createdAt
+        && incoming().authorUid == existing().authorUid
+        && incoming().diff(existing()).affectedKeys().hasOnly(['code', 'name', 'city', 'state', 'address', 'phone', 'email', 'headOfChamberName', 'status', 'updatedAt']);
+      allow delete: if isValidId(branchId) && (isPrincipalPartner() || resource.data.authorUid == 'PRINCIPAL_PARTNER_SESSION');
+    }
+
+    // Unified Operational Records Collection
+    match /records/{recordId} {
+      allow get: if isValidId(recordId) && resource.data.isPublic in [true, false];
+      allow list: if resource.data.isPublic in [true, false];
+      allow create: if isValidId(recordId) && isValidFirmRecord(incoming());
+      allow update: if isValidId(recordId)
+        && isValidFirmRecord(incoming())
+        && incoming().createdAt == existing().createdAt
+        && incoming().uniqueCode == existing().uniqueCode
+        && incoming().authorUid == existing().authorUid
+        && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'subtitle', 'status', 'category', 'subCategory', 'amount', 'vatAmount', 'whtAmount', 'isPublic', 'portalAccessCode', 'details', 'updatedAt']);
+      allow delete: if isValidId(recordId) && (isPrincipalPartner() || resource.data.authorUid in ['STAFF_SESSION', 'PUBLIC_PORTAL'] || (isSignedIn() && resource.data.authorUid == request.auth.uid));
+    }
+
+    // Immutable Audit Logs Collection
+    match /audit_logs/{logId} {
+      allow get: if isValidId(logId) && resource.data.severity in ['Info', 'Warning', 'Critical'];
+      allow list: if resource.data.severity in ['Info', 'Warning', 'Critical'];
+      allow create: if isValidId(logId) && isValidAuditLog(incoming());
+      allow update, delete: if false;
+    }
+  }
+}

@@ -1,0 +1,686 @@
+================================================================================
+MASTER PROMPT
+Integrated Multi-Branch Law Firm Management System for
+B. B. BALE & CO CHAMBERS
+
+Built on Google AI Studio → GitHub → Hosted on Cloudflare Pages
+
+Build Platform: Google AI Studio (Build Mode)
+Source Control: GitHub
+Hosting: Cloudflare Pages
+Backend Services: Firebase (Auth, Firestore, Cloud Storage)
+Database: Cloud Firestore (Native Mode)
+Authentication: Firebase Authentication (Email/Password + Custom Claims)
+Storage: Firebase Cloud Storage
+Sync: Firestore onSnapshot real-time listeners + polling fallback
+Logo: Nigerian Coat of Arms Eagle Motif (Red Eagle)
+================================================================================
+
+
+================================================================================
+1. CRITICAL WARNINGS TO THE AI DEVELOPER / BUILDER
+================================================================================
+
+READ THIS FIRST. THESE ARE NON-NEGOTIABLE.
+
+ABSOLUTELY NOT ALLOWED:
+
+1. NO dummy data - Do not create fake clients, matters, tenants, properties,
+   owners, invoices, receipts, precedents, notices, agreements, staff, or users.
+2. NO fake data - No fabricated names, addresses, phone numbers, emails,
+   court names, case numbers, or invented content.
+3. NO test data - Do not seed the database with sample data. The system must
+   start EMPTY and CLEAN.
+4. NO placeholder text - No "Lorem ipsum", "Coming soon", "Under construction",
+   "TODO", "FIXME".
+5. NO stub functions - Every button, link, form, and action must be fully
+   functional.
+6. NO hardcoded credentials - No passwords, API keys, tokens, or secrets in
+   frontend code.
+7. NO disabled features - Every feature described must be live and working
+   on delivery.
+8. NO localhost-only build - Must be deployable to Cloudflare Pages.
+
+REQUIRED:
+
+1. Production-ready - Deployable and usable immediately.
+2. Cloudflare Pages hosting - Deployed via GitHub integration, with correct
+   build settings.
+3. Firebase backend - Auth, Firestore, Storage all configured and working.
+4. Empty on first run - No seeded data.
+5. Single-phase delivery - Everything at once.
+6. Tested - Every acceptance test passes.
+7. Nigerian Court Eagle Logo - Professional, heraldic, scalable (see Section 2).
+8. Local file picker for all uploads - Every upload selected from device
+   (see Section 19).
+9. Cross-device sync with fallback - Firestore listeners + polling fallback
+   + reconnection (see Section 5).
+
+
+================================================================================
+2. BRANDING & LOGO
+================================================================================
+
+2.1 NIGERIAN COURT EAGLE LOGO (REQUIRED)
+
+The logo must feature a stylized red eagle representing strength and judicial
+authority, drawn from the Nigerian Coat of Arms.
+
+Logo Design Requirements:
+- Central element: A red eagle with spread wings, sitting atop a shield
+- Shield: Black shield with a white "Y" shape (representing the Niger and
+  Benue rivers)
+- Supporting element: Two white horses (one on each side of the shield)
+  representing dignity
+- Base: Green grass with yellow Costus Spectabilis flowers (Nigeria's
+  national flower)
+- Banner: The firm name "B. B. BALE & CO" in elegant serif, with "CHAMBERS"
+  beneath
+- Color palette:
+    * Primary: Deep Navy Blue (#1a2a4a)
+    * Accent: Gold (#c9a227)
+    * Eagle: Rich Red (#b22222)
+    * Shield: Black (#1a1a1a) with White (#ffffff) "Y"
+    * Horses: White (#ffffff)
+    * Grass: Green (#2e7d32), Flowers: Yellow (#f9a825)
+- Style: Classic heraldic, authoritative, timeless, scalable
+- Output: SVG + PNG (32px, 64px, 128px, 256px, 512px, 1024px) + favicon
+
+2.2 THEME: "EXECUTIVE ELEGANCE"
+
+Color Palette:
+| Purpose        | Color          | Hex     |
+|----------------|----------------|---------|
+| Primary        | Deep Navy Blue | #1a2a4a |
+| Secondary      | Gold           | #c9a227 |
+| Background     | Warm Off-White | #f8f6f1 |
+| Surface        | Pure White     | #ffffff |
+| Text Primary   | Charcoal       | #1c1c1c |
+| Text Secondary | Slate Gray     | #5a5a5a |
+| Success        | Forest Green   | #2e7d32 |
+| Warning        | Amber          | #f9a825 |
+| Danger         | Deep Red       | #c62828 |
+
+Typography: Playfair Display (headings), Inter (body), JetBrains Mono (codes).
+
+
+================================================================================
+3. BUILD, SOURCE CONTROL & HOSTING ARCHITECTURE
+================================================================================
+
+3.1 THE PIPELINE
+
+Google AI Studio (Build Mode)
+    |
+    | Generate React frontend + Firebase config
+    v
+GitHub Repository (auto-created by AI Studio export)
+    |
+    | Push code to GitHub
+    v
+Cloudflare Pages (connected to GitHub)
+    |
+    | Auto-build on every push
+    v
+Live Site (*.pages.dev or custom domain)
+
+3.2 GOOGLE AI STUDIO - BUILD ONLY
+
+- Use Google AI Studio Build Mode to generate the React application code.
+- AI Studio generates the frontend, Firebase configuration files, and basic
+  project structure.
+- Do NOT use AI Studio's Publish/Cloud Run feature. You are hosting on
+  Cloudflare.
+- Export the generated code to GitHub using AI Studio's "Export to GitHub"
+  button.
+- AI Studio creates a dedicated GitHub repository and pushes the code.
+
+3.3 GITHUB - SOURCE CONTROL
+
+- The repository created by AI Studio is your single source of truth.
+- All future changes go through GitHub (either via AI Studio sync, or direct
+  commits).
+- GitHub triggers Cloudflare Pages builds on every push to the production
+  branch (usually main).
+
+3.4 CLOUDFLARE PAGES - HOSTING
+
+Cloudflare Pages hosts the built frontend. It serves static assets from
+Cloudflare's global CDN and handles SSL automatically.
+
+BUILD CONFIGURATION (Cloudflare Pages):
+| Setting                | Value                |
+|------------------------|----------------------|
+| Framework preset       | React (Vite)         |
+| Build command          | npm run build        |
+| Build output directory | dist                 |
+| Root directory         | / (default)          |
+| Node version           | 18 or 20 (set via env var NODE_VERSION) |
+
+ENVIRONMENT VARIABLES (Cloudflare Pages -> Settings -> Environment Variables):
+
+Use the VITE_ prefix (standard for Vite/React):
+
+VITE_FIREBASE_API_KEY = your_api_key
+VITE_FIREBASE_AUTH_DOMAIN = your_project_id.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID = your_project_id
+VITE_FIREBASE_STORAGE_BUCKET = your_project_id.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID = your_sender_id
+VITE_FIREBASE_APP_ID = your_app_id
+VITE_FIREBASE_MEASUREMENT_ID = your_measurement_id
+
+Set these for Production (and Preview if you want preview deployments to
+work).
+
+Important: The Firebase config is safe to expose in the frontend. Security
+comes from Firestore Security Rules, not from hiding the config.
+
+3.5 CUSTOM DOMAIN (CLOUDFLARE)
+
+1. After deployment, go to Cloudflare Pages -> your project -> Custom Domains.
+2. Add your domain (e.g., bbbalechambers.com and management.bbbalechambers.com).
+3. If the domain is already on Cloudflare, DNS is configured automatically.
+4. If not, Cloudflare provides the CNAME records to add at your registrar.
+
+
+================================================================================
+4. DUAL-SITE ARCHITECTURE
+================================================================================
+
+4.1 OVERVIEW
+
+Two distinct frontend entry points under one codebase:
+
+1. Public Site - accessible to anyone; no login needed for most features
+2. Internal Site - staff-only; login required; role-specific dashboards
+
+Both are served from the same Cloudflare Pages deployment, separated by
+routes and authentication.
+
+4.2 PUBLIC SITE - ROUTES
+
+| Page                    | Route               | Sensitive?         |
+|-------------------------|---------------------|--------------------|
+| Homepage                | /                   | No                 |
+| About Us                | /about              | No                 |
+| Practice Areas          | /practice-areas     | No                 |
+| Our Team                | /team               | No                 |
+| Gallery                 | /gallery            | No                 |
+| Branch Gallery          | /gallery/:branchCode| No                 |
+| Consultations           | /book               | No                 |
+| Contact                 | /contact            | No                 |
+| Public Property Listings| /properties         | No                 |
+| FAQ                     | /faq                | No                 |
+| Terms                   | /terms              | No                 |
+| Privacy                 | /privacy            | No                 |
+| Client Access           | /client-access      | Yes (Code + ID)    |
+| Owner Access            | /owner-access       | Yes (Code + ID)    |
+| Tenant Access           | /tenant-access      | Yes (Code + ID)    |
+| Staff Login             | /staff-login        | Yes (Internal)     |
+
+Sensitive routes must return 404 or redirect to access page if unauthenticated.
+
+4.3 INTERNAL SITE - ROUTES
+
+| Page                | Route                |
+|---------------------|----------------------|
+| Dashboard           | /dashboard           |
+| Clients             | /clients             |
+| Matters             | /matters             |
+| Consultations       | /consultations       |
+| Documents           | /documents           |
+| Court Diary         | /court-diary         |
+| Invoices            | /invoices            |
+| Receipts            | /receipts            |
+| Trust Account       | /trust               |
+| Operating Account   | /operating           |
+| Properties          | /properties-admin    |
+| Owners              | /owners              |
+| Tenants             | /tenants             |
+| Tenancy Agreements  | /tenancy-agreements  |
+| Rent                | /rent                |
+| Maintenance         | /maintenance         |
+| Inspections         | /inspections         |
+| Precedents          | /precedents          |
+| Notices             | /notices             |
+| Tribunal            | /tribunal            |
+| Staff               | /staff               |
+| Payroll             | /payroll             |
+| Branch Expenses     | /expenses            |
+| Internal Requests   | /requests            |
+| Special Tasks       | /tasks               |
+| Backups             | /backups             |
+| Reports             | /reports             |
+| Compliance          | /compliance          |
+| Audit Logs          | /audit-logs          |
+| Alerts              | /alerts              |
+| Live Chats          | /chats               |
+| Public Content      | /public-content      |
+| Gallery Admin       | /gallery-admin       |
+| Settings            | /settings            |
+| Bank Accounts       | /bank-accounts       |
+| Fees                | /fees                |
+| Branches            | /branches (Principal Partner only) |
+
+4.4 INTERNAL SITE - ROLE-SPECIFIC DASHBOARDS
+
+- Principal Partner: Firm-wide overview (all branches, matters, properties,
+  finances, escalations, security events)
+- Head of Chamber: Branch overview (matters, properties, finances, pending
+  approvals)
+- Administrator/Secretary: Branch ops (schedule, tasks, live chats, backup
+  status)
+- Account Officer: Branch financial (invoices, receipts, trust, payroll,
+  expenses)
+- Counsel/Staff: My matters, my tasks, my court dates, my performance
+
+
+================================================================================
+5. CROSS-DEVICE DATA SYNC
+================================================================================
+
+5.1 CORE SYNC ARCHITECTURE
+
+| Component        | Implementation                                  |
+|------------------|-------------------------------------------------|
+| Real-time        | Firestore onSnapshot on all active collections  |
+| Fallback polling | Every 30 seconds if listener fails 3 times      |
+| Foreground resume| On visibilitychange, re-fetch and re-subscribe  |
+| Reconnection     | Exponential backoff: 1s, 2s, 4s, 8s, 16s, 30s  |
+| Stale detection  | Cache older than 2 min -> "Syncing..." + refresh|
+| Quota monitoring | Track daily reads/writes; alert if >80% of free |
+| UI indicator     | Green Synced / Yellow Syncing / Red Offline /   |
+|                  | Warning Reconnecting                            |
+
+5.2 FIRESTORE LISTENER PATTERN (REQUIRED)
+
+// Must use onSnapshot, not getDocs, for real-time
+import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { db } from "./firebase";
+
+function subscribeToCollection(collectionName, filters, callback) {
+  const q = query(collection(db, collectionName), ...filters);
+  const unsubscribe = onSnapshot(
+    q,
+    (snapshot) => {
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      callback(data);
+    },
+    (error) => {
+      console.error("Listener error:", error);
+      startPolling(collectionName, filters, callback);
+    }
+  );
+  return unsubscribe;
+}
+
+function startPolling(collectionName, filters, callback) {
+  const interval = setInterval(async () => {
+    const q = query(collection(db, collectionName), ...filters);
+    const snapshot = await getDocs(q);
+    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    callback(data);
+  }, 30000);
+  return () => clearInterval(interval);
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") {
+    refreshAllListeners();
+  }
+});
+
+5.3 FIRESTORE FREE TIER LIMITS (MONITOR THESE)
+
+| Metric                 | Free Tier Limit |
+|------------------------|-----------------|
+| Real-time update units | 50,000/day      |
+| Document reads         | 50,000/day      |
+| Document writes        | 20,000/day      |
+| Storage                | 1 GiB           |
+
+Quota resets at midnight Pacific Time.
+
+5.4 NON-NEGOTIABLE SYNC RULES
+
+1. Every record stored in Firestore - no device holds authoritative copy.
+2. Every sync respects branch isolation (branch_id filtering).
+3. Every sync respects role permissions (Firestore Security Rules).
+4. Every conflict detected and resolved (last-write-wins with audit trail).
+5. Listener must auto-reconnect on failure (exponential backoff).
+6. Foreground resume must re-sync (visibilitychange event).
+7. Quota monitoring must alert before limit (80% threshold).
+8. Every sync survives Nigerian network conditions (polling fallback, retry).
+
+
+================================================================================
+6. SECURE LOGIN & AUTHENTICATION
+================================================================================
+
+6.1 LOGIN PAGE
+
+- Firm logo (Nigerian Court Eagle)
+- "Secure Access" header with shield icon
+- Empty input fields (no placeholder text)
+- Shield-logo "SIGN IN" button
+- Neutral error: "Invalid credentials. Please try again."
+- Never reveal whether username exists
+
+6.2 RATE LIMITING
+
+5 failures per credential; 10 per IP; 30-min lockout; progressive delays.
+
+6.3 MFA
+
+On first login from new device (OTP via email/SMS); required for sensitive
+actions (bank changes, salary, trust withdrawals, password resets, branch
+suspension, backup generation).
+
+
+================================================================================
+7. DEFAULT CREDENTIALS & FORCED CHANGE
+================================================================================
+
+| Role               | Default Username   |
+|--------------------|--------------------|
+| Principal Partner  | Principal Partner  |
+| Head of Chamber    | Head of Chamber    |
+| Administrator      | Administrator      |
+| Account Officer    | Account Officer    |
+| Counsel/Staff      | Counsel or Staff   |
+
+Default password: Admin@2026
+
+Forced change on first login; cannot be reused; cannot be skipped.
+
+
+================================================================================
+8. PRINCIPAL PARTNER - EXCLUSIVE POWERS
+================================================================================
+
+- Only user who can Add/Edit/Suspend/Archive/Delete Branches
+- Create Head of Chamber
+- Cross-Branch Reports
+- Global Settings
+- Trust Withdrawal Approval
+- Password Reset (Any User)
+- Full Public Content Control
+- Final Escalation Authority
+- Nigerian Court Eagle Logo Upload (local file picker)
+
+
+================================================================================
+9. BRANCH MANAGEMENT - PRINCIPAL PARTNER ONLY
+================================================================================
+
+| Action                          | Principal Partner | Head | Admin | Account | Counsel |
+|---------------------------------|:-----------------:|:----:|:-----:|:-------:|:-------:|
+| Add/Edit/Suspend/Archive/Delete | Yes               | No   | No    | No      | No      |
+| View own branch                 | Yes               | Yes  | Yes   | Yes     | Yes     |
+| Change branch code              | Yes               | No   | No    | No      | No      |
+
+
+================================================================================
+10. USER ROLES & CREATION HIERARCHY
+================================================================================
+
+| Role              | Scope              | Max per Branch |
+|-------------------|--------------------|----------------|
+| Principal Partner | All branches       | 1 firm-wide    |
+| Head of Chamber   | One branch         | 1 per branch   |
+| Administrator     | One branch         | 1 per branch   |
+| Account Officer   | One branch         | 1 per branch   |
+| Counsel/Staff     | One branch         | Unlimited      |
+| Client            | Own matters        | Unlimited      |
+| Tenant            | Own tenancy        | Unlimited      |
+| Property Owner    | Own properties     | Unlimited      |
+
+Creation Hierarchy:
+Principal Partner -> Head of Chamber -> Admin/Account/Counsel.
+
+
+================================================================================
+11. HIERARCHICAL ORGANIZATION
+================================================================================
+
+MATTERS & LITIGATION
+Court Category -> Case Type -> Sub-Category
+
+Court Categories: Supreme Court, Court of Appeal, Federal High Court,
+State High Court, National Industrial Court, Magistrate Court, Customary
+Court, Sharia Court, Rent Tribunal, Special Courts, Other.
+
+Case Types: Civil, Criminal, Sharia, Family, Commercial, Constitutional,
+Land/Property, Labour, Tax, Election Petition, Other.
+
+PROPERTY & TENANT
+Owner -> Property -> Tenant
+
+
+================================================================================
+12. CORE LEGAL MODULES
+================================================================================
+
+- Client & Matter Management (firm-wide conflict check)
+- Case & Court Management (diary, deadlines, judge notes)
+- Document Management (version control, legal hold, e-signature)
+- Time Tracking & Billing (LPRO 2023 caps)
+- Trust Accounting (three-way reconciliation)
+- Compliance & Regulatory (NBA fees, MCPD, seals, AML)
+- Court Precedent Bank (firm-wide, categorized)
+- Quit Notice & Rent Tribunal Generation
+- Tenancy Agreement Generation (Nigerian law)
+- Universal Print/Download (clean document only)
+
+
+================================================================================
+13. PROPERTY & TENANT MANAGEMENT
+================================================================================
+
+- Owner multi-property registration (one Owner ID, many properties)
+- Tenant lifecycle (KYC, agreements, rent, maintenance, inspections)
+- Rent collection (arrears aging 30/60/90/120+)
+- Property expenses & maintenance tickets
+- Owner statements & remittances
+- Public property listings (city-level only)
+
+
+================================================================================
+14. INVOICE & RECEIPT MODULE
+================================================================================
+
+- Branch-specific numbering (e.g., BBB-LAG/INV/2025/0001)
+- VAT (7.5%) and WHT auto-computation
+- Editable templates per branch
+- Void with reason; credit note for corrections
+- Emailed + portal + printable
+
+
+================================================================================
+15. BANK ACCOUNTS & FEE MANAGEMENT
+================================================================================
+
+- Head of Chamber manages branch bank accounts
+- Display on invoice/receipt controlled by Head
+- Principal Partner sets firm-wide fee min/max
+- Head sets branch-specific fees within min/max
+- Fee versioning with audit trail
+
+
+================================================================================
+16. UNIQUE CODES MODULE
+================================================================================
+
+[BRANCH-PREFIX]/[ENTITY-TYPE]/[YEAR]/[SEQUENCE]
+
+Examples:
+BBB-LAG/MAT/2025/0001
+BBB-LAG/INV/2025/0001
+BBB-LAG/CLI/0001
+BBB-LAG/PROP/0001
+
+
+================================================================================
+17. PUBLIC CONTENT & GALLERY
+================================================================================
+
+- Principal Partner controls all public content
+- Head controls branch-specific content
+- Branch gallery selector (public site)
+- Photo consent tracking (NDPA)
+
+
+================================================================================
+18. LIVE CHAT & ALERTS
+================================================================================
+
+- Public live chat with Administrator
+- WhatsApp fallback
+- Dual alert system (internal + external)
+- Priority: Critical, High, Medium, Low
+
+
+================================================================================
+19. LOCAL FILE PICKER FOR ALL UPLOADS
+================================================================================
+
+RULE:
+Every upload must use the device's native file picker. No URL entry, no
+third-party cloud, no camera-only.
+
+UPLOAD POINTS:
+Profile pictures, KYC documents, property titles/photos, tenancy agreements,
+notices, tribunal processes, court precedents, matter documents, invoice/
+receipt attachments, payment proofs, maintenance photos, inspection reports,
+backup PDFs, gallery photos, Nigerian Court Eagle Logo, branch logos.
+
+ACCEPTED TYPES:
+JPG, PNG, WEBP, HEIC, PDF, DOCX, XLSX, MP4, MOV (limits per type).
+
+UPLOAD TO FIREBASE CLOUD STORAGE:
+- Files upload directly to Firebase Cloud Storage from the frontend.
+- Metadata saved to Firestore.
+- Signed URLs for secure retrieval.
+- Branch isolation enforced via Firestore Security Rules.
+
+
+================================================================================
+20. HEAD OF CHAMBER DELEGATED AUTHORITY
+================================================================================
+
+Head handles 80% of decisions locally (expenses up to 200,000 NGN, maintenance
+up to 100,000 NGN, etc.). Escalates to Principal Partner only for:
+- Branch creation
+- Salaries
+- Payroll final approval
+- Expense above 200,000 NGN
+- Trust withdrawals
+- Legal hold deletion
+- Firm branding changes
+
+
+================================================================================
+21. ADMINISTRATOR HARD-COPY BACKUP
+================================================================================
+
+- Date-range selection (From/To)
+- Category selection (all or specific)
+- PDF generation -> download -> print
+- Scheduled backups (weekly/monthly/quarterly)
+- Retention 7 years (NDPA)
+- Watermarked "CONFIDENTIAL - BRANCH RECORDS"
+
+
+================================================================================
+22. DELIVERABLES
+================================================================================
+
+1. Fully functional multi-branch law firm management system
+2. Dual-site architecture (Public + Internal)
+3. Cross-device real-time sync with fallback
+4. Nigerian Court Eagle logo + Executive Elegance theme
+5. Firebase Auth + Firestore + Cloud Storage
+6. Code pushed to GitHub repository
+7. Deployed on Cloudflare Pages with correct build settings
+8. Firebase environment variables configured in Cloudflare Pages
+9. Local file picker for all uploads
+10. All acceptance tests passing
+
+
+================================================================================
+23. ACCEPTANCE TESTS (CRITICAL - MUST PASS)
+================================================================================
+
+CLOUDFLARE PAGES DEPLOYMENT
+1. Code is in a GitHub repository (exported from AI Studio)
+2. Cloudflare Pages project connected to the GitHub repo
+3. Build command: npm run build
+4. Build output directory: dist
+5. Framework preset: React (Vite)
+6. Firebase environment variables set in Cloudflare Pages
+7. Deployment succeeds without errors
+8. Site is accessible via *.pages.dev URL
+9. Custom domain mapped successfully (if applicable)
+10. Push to GitHub triggers automatic redeploy
+
+CROSS-DEVICE SYNC
+11. Two-device real-time sync works within 5 seconds
+12. Background tab resumes sync within 10 seconds on foreground
+13. Polling fallback activates after 3 listener failures
+14. Quota alert fires at 80% of free tier
+15. Sync status indicator accurate
+
+BRANDING
+16. Nigerian Court Eagle logo displays correctly
+17. Logo is professional, scalable, heraldic
+18. Executive Elegance theme applied consistently
+
+LOCAL FILE PICKER
+19. Every upload uses native file picker
+20. No URL entry allowed
+21. File type and size validation works
+22. Upload progress shown
+23. Upload audit logged
+
+GENERAL
+24. No dummy/fake/test data on first run
+25. Every feature works end-to-end
+26. Firebase Auth, Firestore, Storage all functional
+27. Firestore Security Rules configured (default-deny)
+
+Every test must pass before delivery.
+
+
+================================================================================
+24. NON-NEGOTIABLE FINAL RULES
+================================================================================
+
+1. NO dummy data - System starts empty and clean
+2. NO fake data - No fabricated content
+3. NO test data - No seeded records
+4. NO localhost-only build - Must be deployed on Cloudflare Pages
+5. Cross-device sync must work - With reconnection, polling fallback,
+   foreground resume
+6. Nigerian Court Eagle logo - Required, professional, heraldic
+7. GitHub -> Cloudflare Pages - Build and hosting pipeline
+8. Firebase environment variables - Set in Cloudflare Pages, not hardcoded
+9. Local file picker for all uploads - No exceptions
+
+If you cannot deliver the complete system as specified, do not deliver at all.
+
+
+================================================================================
+END OF MASTER PROMPT
+================================================================================
+
+This is the complete, final master prompt for the
+Google AI Studio -> GitHub -> Cloudflare Pages pipeline.
+
+Build the app in Google AI Studio. Export to GitHub. Connect GitHub to
+Cloudflare Pages. Set Firebase environment variables. Deploy.
+
+The system must be production-ready, with no dummy data, no fake data, no
+test data. Real-time cross-device sync must work with reconnection logic.
+The Nigerian Court Eagle logo must be beautiful and professional. Every
+upload must use the local file picker. Firebase provides the backend
+services. Cloudflare Pages provides the hosting.
